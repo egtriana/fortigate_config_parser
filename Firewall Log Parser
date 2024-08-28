@@ -1,0 +1,30 @@
+The log parser helps me to put into a friendly format the logs received in email alert notifications. For example:
+
+date=2024-08-27 time=14:10:49 devname=FG1800F-INTERNET-1 devid=FG180FTK20900413 eventtime=1724782249173331955 tz="-0400" logid="0100044547" type="event" subtype="system" level="information" 
+vd="root" logdesc="Object attribute configured" user="admin" ui="GUI(192.168.194.3)" action="Edit" cfgtid=244712687 uuid="b413e8ca-03f3-51eb-0e22-155732ead0b8" cfgpath="firewall.policy" cfgobj="119" 
+cfgattr="dstaddr[Lync_Edge_2013_inside s_dmz_lync-2013->Lync_Edge_2013_inside]" msg="Edit firewall.policy 119"
+
+will be output as:
+
+Parameter	  Value
+date	      2024-08-27
+time	      14:10:49
+devname	    FG1800F-INTERNET-1
+devid	      FG180FTK20900413
+eventtime	  1724782249173331955
+tz	        "-0400"
+logid	      "0100044547"
+type	      "event"
+subtype	    "system"
+level	      "information"
+vd	        "root"
+logdesc	    "Object
+user	      "admin"
+ui	        "GUI(192.168.194.3)"
+action	    "Edit"
+cfgtid	    244712687
+uuid	      "b413e8ca-03f3-51eb-0e22-155732ead0b8"
+cfgpath	    "firewall.policy"
+cfgobj	    "119"
+cfgattr	    "dstaddr[Lync_Edge_2013_inside
+msg	        "Edit
