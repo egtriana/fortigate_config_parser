@@ -13,20 +13,36 @@ The result will be divided in sections. Every section can be exported as a CSV f
 
 Sections:
 
-General: device hostname and Serial Numner
+General: device hostname and Serial Number
+
 Security Policies: disabled policies are shown in red
+
 Virtual VIP: shows all defines Virtual IP's. If shows in red, it has port forwarding enabled
+
 Firewall interfaces: tunnel interfaces are shown in red
+
 Address Objects: all network objects
+
 Address Groups: shows the groups and group members
+
 Service Groups: your customized port definitions
+
 IP Pools
+
 VPN SSL Portals and associated IP Pools
+
 VPN SSL Portal Assigments
+
 SD-WAN Zones
+
 SD-WAn Zones Members
+
 Local Custom Categories ID (Web filtering override)
+
 Local Ratings
+
+
+Future work:
 
 Time permits, I will work on a version to parse the configuration of Fortigates used as Switch and WiFi Controller.
 
