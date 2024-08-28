@@ -1,0 +1,95 @@
+<html><head><base href="https://websim.ai/firewall-log-parser/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firewall Log Parser</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f4f4f4;
+  }
+  h1 {
+    color: #2c3e50;
+    text-align: center;
+  }
+  #logInput {
+    width: 100%;
+    height: 150px;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  #parseButton {
+    display: block;
+    width: 200px;
+    margin: 0 auto 20px;
+    padding: 10px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  #parseButton:hover {
+    background-color: #2980b9;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  th {
+    background-color: #3498db;
+    color: white;
+  }
+  tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  tr:hover {
+    background-color: #e9e9e9;
+  }
+</style>
+</head>
+<body>
+  <h1>Firewall Log Parser</h1>
+  <textarea id="logInput" placeholder="Paste your firewall log here..."></textarea>
+  <button id="parseButton">Parse Log</button>
+  <div id="result"></div>
+
+  <script>
+    document.getElementById('parseButton').addEventListener('click', parseLog);
+
+    function parseLog() {
+      const logText = document.getElementById('logInput').value;
+      const logEntries = logText.split('\n');
+      let tableHTML = '<table><tr><th>Parameter</th><th>Value</th></tr>';
+
+      logEntries.forEach(entry => {
+        const pairs = entry.split(' ');
+        pairs.forEach(pair => {
+          const [param, value] = pair.split('=');
+          if (param && value) {
+            tableHTML += `<tr><td>${param}</td><td>${value}</td></tr>`;
+          }
+        });
+      });
+
+      tableHTML += '</table>';
+      document.getElementById('result').innerHTML = tableHTML;
+    }
+  </script>
+</body>
+</html>
