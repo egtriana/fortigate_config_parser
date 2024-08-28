@@ -1,0 +1,269 @@
+<html><head>
+    <title>Fortigate Configuration File Parser 2024.07 (07)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .section {
+            margin-top: 30px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .disabled {
+            color: red;
+        }
+        .portforward-enabled {
+            color: red;
+        }
+        .tunnel-type {
+            color: red;
+        }
+        .download-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Fortigate Configuration File Parser 2024.07 (07)</h1>
+    <textarea id="configInput" placeholder="Paste your Fortigate configuration here..."></textarea>
+    <button onclick="parseConfiguration()">Parse Configuration</button>
+
+    <div id="results"></div>
+
+    <script>
+        function parseConfiguration() {
+            const config = document.getElementById('configInput').value;
+            const results = document.getElementById('results');
+            results.innerHTML = '';
+
+            const sections = [
+                {
+                    title: 'General',
+                    startText: 'config system global',
+                    parameters: ['hostname', 'alias'],
+                    singleRow: true
+                },
+                {
+                    title: 'Security Policies',
+                    startText: 'config firewall policy',
+                    parameters: ['policy_ID', 'status', 'name', 'srcintf', 'dstintf', 'action', 'secaddr', 'dstaddr', 'schedule', 'service', 'nat', 'utm', 'logtraffic', 'comments'],
+                    specialRender: (row) => row.status === 'disable' ? 'disabled' : ''
+                },
+                {
+                    title: 'Virtual IP Addresses',
+                    startText: 'config firewall vip',
+                    parameters: ['vip_address_name', 'extip', 'mappedip', 'extintf', 'portforward', 'protocol', 'extport', 'mappedport', 'comment'],
+                    specialRender: (row) => row.portforward === 'enable' ? 'portforward-enabled' : ''
+                },
+                {
+                    title: 'Firewall Interfaces',
+                    startText: 'config system interface',
+                    parameters: ['interface_name', 'vdom', 'mode', 'allowaccess', 'type', 'alias', 'ip', 'role', 'snmp-index', 'speed', 'mediatype'],
+                    specialRender: (row) => row.type === 'tunnel' ? 'tunnel-type' : ''
+                },
+                {
+                    title: 'Addresses',
+                    startText: 'config firewall address',
+                    parameters: ['address_name', 'type', 'associated-interface', 'start-ip', 'end-ip', 'subnet', 'fqdn', 'uuid']
+                },
+                {
+                    title: 'Addresses Groups',
+                    startText: 'config firewall addrgrp',
+                    parameters: ['address_group_name', 'member']
+                },
+                {
+                    title: 'Service Groups',
+                    startText: 'config firewall service group',
+                    parameters: ['service_group', 'member']
+                },
+                {
+                    title: 'User Groups',
+                    startText: 'config user group',
+                    parameters: ['user_group', 'member']
+                },
+                {
+                    title: 'IP Pools',
+                    startText: 'config firewall ippool',
+                    parameters: ['ip_pool', 'type', 'startip', 'endip', 'comments']
+                },
+                {
+                    title: 'VPN SSL Portals',
+                    startText: 'config vpn ssl web portal',
+                    parameters: ['vpn_ssl_portal', 'tunnel-mode', 'ip-pools', 'split-tunneling', 'split-tunneling-routing-address']
+                },
+                {
+                    title: 'VPN SSL Portal Assignments',
+                    startText: 'config authentication-rule',
+                    parameters: ['vpn_ssl_portal_assigment', 'groups', 'portal', 'auth']
+                },
+                {
+                    title: 'SD-WAN Zones',
+                    startText: 'config zone',
+                    parameters: ['sdwan_zones']
+                },
+                {
+                    title: 'SD-WAN Zone Members',
+                    startText: 'config members',
+                    parameters: ['sdwan_zone_member', 'interface', 'gateway']
+                },
+                {
+                    title: 'Local Custom Categories',
+                    startText: 'config webfilter ftgd-local-cat',
+                    parameters: ['custom_categories', 'id']
+                },
+                {
+                    title: 'Local Rating',
+                    startText: 'config webfilter ftgd-local-rating',
+                    parameters: ['local_rating', 'rating']
+                }
+            ];
+
+            sections.forEach(section => {
+                const sectionData = parseSection(config, section.startText, section.parameters, section.singleRow);
+                displayTable(section.title, sectionData, results, section.specialRender);
+                if (!section.singleRow) {
+                    generateCSV(section.title, sectionData);
+                }
+            });
+        }
+
+        function parseSection(config, sectionStart, parameters, singleRow) {
+            const sectionRegex = new RegExp(`${sectionStart}([\\s\\S]*?)^\\s*end`, 'im');
+            const section = config.match(sectionRegex);
+            if (!section) return [];
+
+            if (singleRow) {
+                const item = {};
+                parameters.forEach(param => {
+                    const paramRegex = new RegExp(`set\\s+${param}\\s+(.+)`, 'i');
+                    const paramMatch = section[1].match(paramRegex);
+                    item[param] = paramMatch ? paramMatch[1].trim() : '';
+                });
+                return [item];
+            } else {
+                const items = [];
+                const itemRegex = /edit\s+("([^"]+)"|(\S+))([\s\S]*?)(?=edit|\s*end)/g;
+                let match;
+
+                while ((match = itemRegex.exec(section[1])) !== null) {
+                    const item = {};
+                    item[parameters[0]] = match[2] || match[3];
+
+                    parameters.slice(1).forEach(param => {
+                        const paramRegex = new RegExp(`set\\s+${param}\\s+(.+)`, 'i');
+                        const paramMatch = match[4].match(paramRegex);
+                        item[param] = paramMatch ? paramMatch[1].trim() : '';
+                    });
+
+                    items.push(item);
+                }
+
+                return items;
+            }
+        }
+
+        function displayTable(title, data, container, specialRender) {
+            if (data.length === 0) return;
+
+            const section = document.createElement('div');
+            section.className = 'section';
+            section.innerHTML = `<h2>${title}</h2>`;
+
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const tbody = document.createElement('tbody');
+
+            // Create header
+            const headerRow = document.createElement('tr');
+            Object.keys(data[0]).forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+
+            // Create rows
+            data.forEach(item => {
+                const row = document.createElement('tr');
+                if (specialRender) {
+                    row.className = specialRender(item);
+                }
+                Object.values(item).forEach(value => {
+                    const td = document.createElement('td');
+                    td.textContent = value;
+                    row.appendChild(td);
+                });
+                tbody.appendChild(row);
+            });
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            section.appendChild(table);
+            container.appendChild(section);
+        }
+
+        function generateCSV(title, data) {
+            if (data.length === 0) return;
+
+            const csvContent = [
+                Object.keys(data[0]).join(','),
+                ...data.map(row => Object.values(row).map(value => `"${value}"`).join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${title.replace(/\s+/g, '_')}.csv`;
+            link.className = 'download-link';
+            link.textContent = `Download ${title} CSV`;
+
+            const section = document.querySelector(`.section:last-child`);
+            section.appendChild(link);
+        }
+    </script>
+</body>
+</html>
